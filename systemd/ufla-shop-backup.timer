@@ -1,0 +1,10 @@
+[Unit]
+Description=Timer de backup diario do ufla-devops-shop
+Requires=ufla-shop-backup.service
+
+[Timer]
+OnCalendar=*-*-* 03:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
