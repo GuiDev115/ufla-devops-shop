@@ -159,6 +159,45 @@ Esta é a mesma estrutura de um bom *issue* e de um bom *postmortem*.
 
 ---
 
+## DevSecOps — Pipeline de segurança
+
+O workflow `.github/workflows/devsecops.yml` implementa *shift-left security*:
+todas as verificações rodam automaticamente na abertura e atualização de Pull Requests.
+**A publicação da imagem Docker só ocorre após a aprovação de todos os checks.**
+
+### Ferramentas integradas
+
+| Ferramenta | Tipo | Bloqueante? |
+|---|---|---|
+| **Gitleaks** | Detecção de segredos no histórico git | Sim — qualquer segredo detectado |
+| **SonarCloud** | Análise estática (SAST) + Quality Gate | Sim — código novo que falha no Quality Gate |
+| **Trivy** (deps) | Varredura das dependências Python (`requirements.txt`) | Sim — CRITICAL/HIGH com correção disponível |
+| **Trivy** (imagem) | Varredura da imagem Docker construída | Sim — CRITICAL/HIGH com correção disponível |
+| **Syft** | Geração de SBOM da imagem Docker | Não (gera e publica como artifact) |
+
+### Regras de bloqueio
+
+- **Gitleaks**: falha ao detectar qualquer token, senha, chave API ou outro segredo no histórico do repositório.
+- **SonarCloud**: falha quando o Quality Gate configurado no SonarCloud não é aprovado (padrão: cobertura mínima, zero Security Hotspots, zero Bugs críticos em código novo).
+- **Trivy**: falha quando encontra vulnerabilidade `CRITICAL` ou `HIGH` **com correção disponível** (`--ignore-unfixed`). Vulnerabilidades `LOW` e `MEDIUM` são registradas em relatório JSON e publicadas como artifact, sem bloquear o pipeline.
+- **Publicação da imagem**: o job `publish` só executa em push à `main` e depende do sucesso de todos os jobs acima.
+
+### Artifacts gerados por execução
+
+| Artifact | Conteúdo |
+|---|---|
+| `sbom.spdx.json` | Software Bill of Materials da imagem (formato SPDX-JSON) |
+| `trivy-deps-report` | Relatório JSON de vulnerabilidades LOW/MEDIUM nas dependências |
+| `trivy-image-report` | Relatório JSON de vulnerabilidades LOW/MEDIUM na imagem Docker |
+
+### Configuração necessária (uma vez)
+
+1. **SonarCloud**: acesse [sonarcloud.io](https://sonarcloud.io), importe o repositório e crie o projeto. Adicione o secret `SONAR_TOKEN` nas configurações do repositório GitHub.
+2. **Gitleaks** (repositório privado): adicione o secret `GITLEAKS_LICENSE` se o repositório for privado. Em repositórios públicos não é necessário.
+3. **Branch protection**: em *Settings → Branches → main*, exija os checks `Gitleaks`, `SonarCloud`, `Trivy (deps)` e `Trivy (imagem)` como obrigatórios para merge.
+
+---
+
 ## Uso de IA generativa
 
 Permitido e incentivado. Em contrapartida, você deve ser capaz de explicar

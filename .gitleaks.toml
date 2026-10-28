@@ -1,0 +1,21 @@
+title = "ufla-devops-shop gitleaks config"
+
+[extend]
+useDefault = true
+
+[[rules]]
+  id = "test-false-positive-allowlist"
+
+[allowlist]
+  description = "Ignorar arquivos de dados e exemplos educacionais"
+  paths = [
+    '''dados/''',
+    '''\.env\.example$''',
+    '''docs/''',
+  ]
+  # Padroes intencionalmente ficticios usados como exemplos no README
+  regexTarget = "match"
+  regexes = [
+    '''POSTGRES_PASSWORD=.*example''',
+    '''sua[-_]senha[-_]aqui''',
+  ]
