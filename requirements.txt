@@ -3,3 +3,6 @@ fastapi==0.141.1
 uvicorn==0.53.0
 psycopg[binary]==3.3.6
 redis==8.1.0
+# DEMO CVE: Pillow 9.3.0 tem CVE-2023-44271 (HIGH) e CVE-2023-50447 (HIGH)
+# correcao disponivel em Pillow>=10.2.0 --- o Trivy vai bloquear este PR
+Pillow==9.3.0
